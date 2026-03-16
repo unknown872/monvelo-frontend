@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -6,7 +7,7 @@ import { checkout as checkoutApi } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth-context";
 import { useCart } from "../../../lib/cart-context";
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
   const { token } = useAuth();
@@ -19,7 +20,6 @@ export default function CheckoutSuccessPage() {
       return;
     }
 
-    // Confirmer le paiement côté backend
     checkoutApi.confirm(orderId, token)
       .then(() => {
         setStatus("success");
@@ -73,5 +73,18 @@ export default function CheckoutSuccessPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+        <span className="text-5xl block mb-6 animate-pulse">⏳</span>
+        <h1 className="font-['Playfair_Display'] text-3xl font-semibold">Chargement...</h1>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }

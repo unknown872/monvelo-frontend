@@ -4,7 +4,6 @@ import Link from "next/link";
 import ProductCard from "../components/ProductCard";
 import { products as productsApi } from "../lib/api";
 import { formatPrice } from "../lib/data";
-import VTT from "../assets/images/VTT.jpg"
 
 export default function HomePage() {
   const [newArrivals, setNewArrivals] = useState([]);

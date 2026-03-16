@@ -2,12 +2,15 @@
 import Link from "next/link";
 import { useCart } from "../../lib/cart-context";
 import { formatPrice } from "../../lib/data";
+import { useAuth } from "../../lib/auth-context";
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem, clearCart } = useCart();
 
+  const { user } = useAuth();
+
   const shippingInfo = "À calculer à l'étape suivante";
-  
+
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-20 text-center">
@@ -94,7 +97,9 @@ export default function CartPage() {
               <div className="md:col-span-2 flex justify-center">
                 <div className="flex items-center border border-gray-200">
                   <button
-                    onClick={() => updateQuantity(item.product.slug, item.quantity - 1)}
+                    onClick={() =>
+                      updateQuantity(item.product.slug, item.quantity - 1)
+                    }
                     className="w-9 h-9 flex items-center justify-center text-sm hover:bg-[var(--color-gray-light)] transition-colors"
                   >
                     −
@@ -106,7 +111,7 @@ export default function CartPage() {
                     onClick={() =>
                       updateQuantity(
                         item.product.slug,
-                        Math.min(item.product.stock, item.quantity + 1)
+                        Math.min(item.product.stock, item.quantity + 1),
                       )
                     }
                     className="w-9 h-9 flex items-center justify-center text-sm hover:bg-[var(--color-gray-light)] transition-colors"
@@ -117,7 +122,9 @@ export default function CartPage() {
               </div>
 
               <div className="md:col-span-2 text-right">
-                <span className="text-sm">{formatPrice(item.product.price)}</span>
+                <span className="text-sm">
+                  {formatPrice(item.product.price)}
+                </span>
                 {item.product.compareAtPrice && (
                   <span className="block text-xs text-[var(--color-gray)] line-through">
                     {formatPrice(item.product.compareAtPrice)}
@@ -155,21 +162,34 @@ export default function CartPage() {
 
               <div className="flex justify-between">
                 <span className="text-[var(--color-gray)]">Livraison</span>
-                <span className="text-xs text-[var(--color-gold)]">{shippingInfo}</span>
+                <span className="text-xs text-[var(--color-gold)]">
+                  {shippingInfo}
+                </span>
               </div>
 
               <div className="border-t border-gray-300 pt-4 flex justify-between">
                 <span className="font-semibold">Total</span>
-                <span className="font-semibold text-lg">{formatPrice(subtotal)}</span>
+                <span className="font-semibold text-lg">
+                  {formatPrice(subtotal)}
+                </span>
               </div>
             </div>
 
-            <Link
-              href="/checkout"
-              className="block w-full mt-8 px-8 py-4 bg-[var(--color-black)] text-white text-sm uppercase tracking-widest font-medium hover:bg-[var(--color-gold)] transition-colors duration-300 text-center"
-            >
-              Commander
-            </Link>
+            {user ? (
+              <Link
+                href="/checkout"
+                className="block w-full mt-8 px-8 py-4 bg-[var(--color-black)] text-white text-sm uppercase tracking-widest font-medium hover:bg-[var(--color-gold)] transition-colors duration-300 text-center"
+              >
+                Commander
+              </Link>
+            ) : (
+              <Link
+                href="/auth"
+                className="block w-full mt-8 px-8 py-4 bg-[var(--color-black)] text-white text-sm uppercase tracking-widest font-medium hover:bg-[var(--color-gold)] transition-colors duration-300 text-center"
+              >
+                Se connecter pour commander
+              </Link>
+            )}
 
             <div className="mt-6 space-y-3">
               {[
@@ -179,7 +199,9 @@ export default function CartPage() {
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-2">
                   <span className="text-sm">{item.icon}</span>
-                  <span className="text-xs text-[var(--color-gray)]">{item.text}</span>
+                  <span className="text-xs text-[var(--color-gray)]">
+                    {item.text}
+                  </span>
                 </div>
               ))}
             </div>

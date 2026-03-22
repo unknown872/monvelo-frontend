@@ -3,32 +3,46 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "../components/ProductCard";
 import { products as productsApi } from "../lib/api";
-import { formatPrice } from "../lib/data";
 
 export default function HomePage() {
   const [newArrivals, setNewArrivals] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    productsApi.list({ isNew: "true", limit: 4 }).then((data) => {
-      setNewArrivals(data.products);
-    });
-    productsApi.list({ sort: "price-desc", limit: 4 }).then((data) => {
-      setBestSellers(data.products);
-    });
-    productsApi.categories().then((data) => {
-      setCategories(data.categories);
-    });
+    Promise.all([
+      productsApi.list({ isNew: "true", limit: 4 }),
+      productsApi.list({ sort: "price-desc", limit: 4 }),
+      productsApi.categories(),
+    ]).then(([newData, bestData, catData]) => {
+      setNewArrivals(newData.products);
+      setBestSellers(bestData.products);
+      setCategories(catData.categories);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   const categoryImages = {
-    Route: "/images/route.jpg",
-    VTT: "/images/VTT.jpg",
+    Route: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=800",
+    VTT: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800",
     Urbain: "https://images.unsplash.com/photo-1505705694340-019e0d8a2e5c?w=800",
     Gravel: "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=800",
-    Électrique : "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800",
+    "Électrique": "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800",
   };
+
+  const ProductSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="aspect-[3/4] bg-[var(--color-gray-light)]" />
+      <div className="mt-4 h-2 bg-[var(--color-gray-light)] w-1/4" />
+      <div className="mt-2 h-3 bg-[var(--color-gray-light)] w-2/3" />
+      <div className="mt-2 h-3 bg-[var(--color-gray-light)] w-1/3" />
+    </div>
+  );
+
+  const CategorySkeleton = () => (
+    <div className="animate-pulse h-80 bg-[var(--color-gray-light)]" />
+  );
 
   return (
     <div>
@@ -89,9 +103,10 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {newArrivals.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+            : newArrivals.map((product) => <ProductCard key={product.id} product={product} />)
+          }
         </div>
         <div className="mt-8 text-center md:hidden">
           <Link href="/products" className="text-sm uppercase tracking-wider text-[var(--color-gray)] hover:text-[var(--color-black)]">Tout voir →</Link>
@@ -100,7 +115,7 @@ export default function HomePage() {
 
       {/* Bannière centrale */}
       <section className="relative h-[50vh] flex items-center overflow-hidden my-16">
-        <div className="absolute inset-0 bg-[url('/images/banner.jpg')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=1600')] bg-cover bg-center" />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-center">
           <span className="text-[var(--color-gold)] text-xs uppercase tracking-[0.3em]">Édition limitée</span>
@@ -116,15 +131,18 @@ export default function HomePage() {
           <h2 className="font-['Playfair_Display'] text-3xl md:text-4xl font-semibold mt-2">Nos catégories</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {categories.slice(0, 3).map((cat) => (
-            <Link key={cat} href={`/products?category=${cat}`} className="group relative h-80 overflow-hidden">
-              <img src={categoryImages[cat] || categoryImages["Route"]} alt={cat} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors duration-500" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                <h3 className="font-['Playfair_Display'] text-2xl font-semibold">{cat}</h3>
-              </div>
-            </Link>
-          ))}
+          {loading
+            ? Array.from({ length: 3 }).map((_, i) => <CategorySkeleton key={i} />)
+            : categories.slice(0, 3).map((cat) => (
+                <Link key={cat} href={`/products?category=${cat}`} className="group relative h-80 overflow-hidden">
+                  <img src={categoryImages[cat] || categoryImages["Route"]} alt={cat} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors duration-500" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                    <h3 className="font-['Playfair_Display'] text-2xl font-semibold">{cat}</h3>
+                  </div>
+                </Link>
+              ))
+          }
         </div>
       </section>
 
@@ -139,9 +157,10 @@ export default function HomePage() {
             <Link href="/products" className="hidden md:block text-sm uppercase tracking-wider text-[var(--color-gray)] hover:text-[var(--color-black)] transition-colors duration-300">Tout voir →</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {bestSellers.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              : bestSellers.map((product) => <ProductCard key={product.id} product={product} />)
+            }
           </div>
         </div>
       </section>
@@ -151,7 +170,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
             { value: "150+", label: "Modèles disponibles" },
-            { value: "+1k", label: "Clients satisfaits" },
+            { value: "12k", label: "Clients satisfaits" },
             { value: "98%", label: "Taux de satisfaction" },
             { value: "24h", label: "Expédition rapide" },
           ].map((stat) => (

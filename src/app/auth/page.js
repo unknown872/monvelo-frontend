@@ -162,7 +162,7 @@ export default function AuthPage() {
 
           <p className="text-sm text-center text-[var(--color-gray)]">
             {isLogin ? "Pas encore de compte ?" : "Déjà un compte ?"}{" "}
-            <button onClick={switchMode} className="text-[var(--color-black)] font-medium hover:text-[var(--color-gold)] transition-colors">
+            <button onClick={switchMode} className="text-[var(--color-black)] cursor-pointer font-medium hover:text-[var(--color-gold)] transition-colors">
               {isLogin ? "S'inscrire" : "Se connecter"}
             </button>
           </p>
